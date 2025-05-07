@@ -1,6 +1,6 @@
 use ndap;
 
-
+CREATE SCHEMA IF NOT EXISTS ndap;
 -- ----------------------------------------------------------------------------------------------
 -- SECTION 1. 
 -- SELECT Queries [5 Marks]
@@ -10,11 +10,7 @@ use ndap;
 -- 	[2 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
--- -- Q1: Display the total number of farmers covered in each state.
-SELECT srcStateName, SUM(TotalFarmersCovered) AS total_farmers
-FROM farmersinsurancedata
-GROUP BY srcStateName;
-
+-- <write your answers in the empty spaces given, the length of solution queries (and the solution writing space) can vary>
 
 
 ###
@@ -25,13 +21,6 @@ GROUP BY srcStateName;
 -- 	[3 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
-SELECT srcStateName,
-       SUM(TotalFarmersCovered) AS total_farmers,
-       SUM(SumInsured) AS total_sum_insured
-FROM farmersinsurancedata
-GROUP BY srcStateName
-ORDER BY total_farmers DESC;
-
 
 
 -- ###
@@ -125,10 +114,77 @@ ORDER BY total_farmers DESC;
 -- ###
 -- TYPE YOUR CODE BELOW >
 
+use ndap
+CREATE TABLE IF NOT EXISTS FarmersInsuranceData(
+ rowID INT PRIMARY KEY,
+ srcYear INT,
+ srcStateName VARCHAR(255),
+ srcDistrictName VARCHAR(255),
+ InsuranceUnits INT,
+ TotalFarmersCovered INT,
+ ApplicationsLoaneeFarmers INT,
+ ApplicationsNonLoaneeFarmers INT,
+ InsuredLandArea FLOAT,
+ FarmersPremiumAmount FLOAT,
+ StatePremiumAmount FLOAT,
+ GOVPremiumAmount FLOAT,
+ GrossPremiumAmountToBePaid FLOAT,
+ SumInsured FLOAT,
+ PercentageMaleFarmersCovered FLOAT,
+ PercentageFemaleFarmersCovered FLOAT,
+ PercentageOthersCovered FLOAT,
+ PercentageSCFarmersCovered FLOAT,
+ PercentageSTFarmersCovered FLOAT,
+ PercentageOBCFarmersCovered FLOAT,
+ PercentageGeneralFarmersCovered FLOAT,
+ PercentageMarginalFarmers FLOAT,
+ PercentageSmallFarmers FLOAT,
+ PercentageOtherFarmers FLOAT,
+ YearCode INT,
+ Year_ VARCHAR(255),
+ Country VARCHAR(255),
+ StateCode INT,
+ DistrictCode INT,
+ TotalPopulation INT,
+ TotalPopulationUrban INT,
+ TotalPopulationRural INT,
+ TotalPopulationMale INT,
+ TotalPopulationMaleUrban INT,
+ TotalPopulationMaleRural INT,
+ TotalPopulationFemale INT,
+ TotalPopulationFemaleUrban INT,
+ TotalPopulationFemaleRural INT,
+ NumberOfHouseholds INT,
+ NumberOfHouseholdsUrban INT,
+ NumberOfHouseholdsRural INT,
+ LandAreaUrban FLOAT,
+ LandAreaRural FLOAT,
+ LandArea FLOAT
+);
+select * from FarmersInsuranceData
 
+LOAD DATA LOCAL INFILE "/Users/kripa/Downloads/SQL_Assg_PMFBY_Dataset_Starter/Data_PMFBY/data.csv"
+INTO TABLE FarmersInsuranceData
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
 
+select * from FarmersInsuranceData
 
--- ###
+select COUNT(*) FROM FarmersInsuranceData;
+
+SELECT srcDistrictName, TotalPopulation
+FROM FarmersInsuranceData
+WHERE srcYear = 2020
+ORDER BY TotalPopulation DESC
+LIMIT 5;
+
+-- Bengaluru Uraban - 9621551
+-- Pune - 9429408
+-- Thane - 8070032
+-- Jaipur - 6626178
+-- Nashik - 6107187
 
 -- 	Q11.	Retrieve the srcStateName, srcDistrictName, and SumInsured for the 10 districts with the lowest non-zero FarmersPremiumAmount, 
 -- 		ordered by insured sum and then the FarmersPremiumAmount.
@@ -137,7 +193,22 @@ ORDER BY total_farmers DESC;
 -- ###
 -- TYPE YOUR CODE BELOW >
 
+SELECT srcStateName, srcDistrictName, SumInsured, FarmersPremiumAmount
+FROM FarmersInsuranceData
+WHERE FarmersPremiumAmount > 0
+ORDER BY SumInsured DESC, FarmersPremiumAmount ASC
+LIMIT 10;
 
+-- 'MAHARASHTRA','Bid','275019','7244.42'
+-- 'MAHARASHTRA','Latur','238546','4860.57'
+-- 'MAHARASHTRA','Latur','231003','4658.48'
+-- 'MADHYA PRADESH','Ujjain','218206','3273.09'
+-- 'MADHYA PRADESH','Ujjain','216693','4333.87'
+-- 'MAHARASHTRA','Nanded','216358','4497.64'
+-- 'MADHYA PRADESH','Ujjain','194391','2915.86'
+-- 'ANDHRA PRADESH','Kurnool','191969','1.19'
+-- 'MAHARASHTRA','Bid','185675','4373.32'
+-- 'MAHARASHTRA','Osmanabad','182755','3672.94'
 
 ###
 
@@ -148,9 +219,22 @@ ORDER BY total_farmers DESC;
 -- ###
 -- TYPE YOUR CODE BELOW >
 
+SELECT 
+    srcStateName,
+    srcYear,
+    SUM(TotalFarmersCovered) AS TotalFarmersCovered,
+    SUM(TotalPopulation) AS TotalPopulation,
+    CAST(SUM(TotalFarmersCovered) AS FLOAT) / NULLIF(SUM(TotalPopulation), 0) AS CoverageRatio
+FROM FarmersInsuranceData
+GROUP BY srcStateName, srcYear
+HAVING SUM(TotalPopulation) > 0
+ORDER BY CoverageRatio DESC
+LIMIT 3;
 
 
--- ###
+-- CHHATTISGARH 2021
+-- TRIPURA 2020
+-- TRIPURA 2021
 
 -- -------------------------------------------------------------------------------------------------
 
@@ -235,13 +319,6 @@ ORDER BY total_farmers DESC;
 -- 	[2 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
-SELECT srcDistrictName, TotalFarmersCovered
-FROM farmersinsurancedata
-WHERE TotalFarmersCovered > (
-    SELECT AVG(TotalFarmersCovered)
-    FROM farmersinsurancedata
-);
-
 
 
 
@@ -253,16 +330,6 @@ WHERE TotalFarmersCovered > (
 -- 	[3 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
-SELECT DISTINCT srcStateName
-FROM farmersinsurancedata
-WHERE SumInsured > (
-    SELECT SumInsured
-    FROM farmersinsurancedata
-    ORDER BY FarmersPremiumAmount DESC
-    LIMIT 1
-);
-
-
 
 
 
@@ -274,19 +341,6 @@ WHERE SumInsured > (
 -- 	[5 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
-SELECT srcDistrictName
-FROM farmersinsurancedata
-WHERE FarmersPremiumAmount > (
-    SELECT AVG(FarmersPremiumAmount)
-    FROM farmersinsurancedata
-    WHERE srcStateName = (
-        SELECT srcStateName
-        FROM farmersinsurancedata
-        ORDER BY TotalPopulation DESC
-        LIMIT 1
-    )
-);
-
 
 
 
@@ -303,14 +357,6 @@ WHERE FarmersPremiumAmount > (
 -- 	[3 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
-SELECT 
-    ROW_NUMBER() OVER (ORDER BY TotalFarmersCovered DESC) AS row_num,
-    srcStateName,
-    srcDistrictName,
-    TotalFarmersCovered,
-    SumInsured
-FROM farmersinsurancedata;
-
 
 
 
@@ -322,16 +368,6 @@ FROM farmersinsurancedata;
 -- 	[3 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
-SELECT 
-    srcStateName,
-    srcDistrictName,
-    SumInsured,
-    RANK() OVER (
-        PARTITION BY srcStateName
-        ORDER BY SumInsured DESC
-    ) AS district_rank
-FROM farmersinsurancedata
-ORDER BY srcStateName ASC, district_rank;
 
 
 
@@ -342,17 +378,6 @@ ORDER BY srcStateName ASC, district_rank;
 -- 	[4 Marks]
 -- ###
 -- TYPE YOUR CODE BELOW >
-SELECT 
-    srcStateName,
-    srcDistrictName,
-    srcYear,
-    FarmersPremiumAmount,
-    SUM(FarmersPremiumAmount) OVER (
-        PARTITION BY srcStateName, srcDistrictName
-        ORDER BY srcYear ASC
-    ) AS cumulative_premium
-FROM farmersinsurancedata
-ORDER BY srcStateName, srcDistrictName, srcYear;
 
 
 
